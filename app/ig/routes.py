@@ -1,9 +1,9 @@
-from flask import Blueprint, redirect, render_template, request, url_for, flash
-from flask_login import current_user, login_required
-from ..apiauthhelper import token_required
+# from flask import Blueprint, redirect, render_template, request, url_for, flash
+# from flask_login import current_user, login_required
+# from ..apiauthhelper import token_required
 
 
-ig = Blueprint('ig', __name__, template_folder='igtemplates')
+# ig = Blueprint('ig', __name__, template_folder='igtemplates')
 
 
 # @ig.route('/posts/create', methods=["GET","POST"])

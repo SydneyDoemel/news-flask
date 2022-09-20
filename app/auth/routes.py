@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from .forms import LoginForm, UserCreationForm
+from flask import Blueprint,request
+
 from ..apiauthhelper import token_required
 #import login funcitonality
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_login import current_user
 from werkzeug.security import check_password_hash
 
 # import models
-from app.models import SavedCategories, User
+from app.models import SavedArticles, SavedCategories, User
 
 auth = Blueprint('auth', __name__, template_folder='authtemplates')
 
@@ -14,62 +14,62 @@ from app.models import db
 
 
 
-@auth.route('/login', methods = ["GET","POST"])
-def logMeIn():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
+# @auth.route('/login', methods = ["GET","POST"])
+# def logMeIn():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('index'))
 
-    form = LoginForm()
-    if request.method == "POST":
-        if form.validate():
-            username = form.username.data
-            password = form.password.data
-            # Query user based off of username
-            user = User.query.filter_by(username=username).first()
-            print(user.username, user.password, user.id)
-            if user:
-                # compare passwords
-                if check_password_hash(user.password, password):
-                    flash('You have successfully logged in!', 'success')
-                    login_user(user)
-                    return redirect(url_for('index'))
-                else:
-                    flash('Incorrect username/password combination.', 'danger')
-            else:
-                flash('User with that username does not exist.', 'danger')
+#     form = LoginForm()
+#     if request.method == "POST":
+#         if form.validate():
+#             username = form.username.data
+#             password = form.password.data
+#             # Query user based off of username
+#             user = User.query.filter_by(username=username).first()
+#             print(user.username, user.password, user.id)
+#             if user:
+#                 # compare passwords
+#                 if check_password_hash(user.password, password):
+#                     flash('You have successfully logged in!', 'success')
+#                     login_user(user)
+#                     return redirect(url_for('index'))
+#                 else:
+#                     flash('Incorrect username/password combination.', 'danger')
+#             else:
+#                 flash('User with that username does not exist.', 'danger')
 
-    return render_template('login.html', form=form)
+#     return render_template('login.html', form=form)
 
-@auth.route('/logout')
-@login_required
-def logMeOut():
-    flash("Successfully logged out.", 'success')
-    logout_user()
-    return redirect(url_for('auth.logMeIn'))
+# @auth.route('/logout')
+# @login_required
+# def logMeOut():
+#     flash("Successfully logged out.", 'success')
+#     logout_user()
+#     return redirect(url_for('auth.logMeIn'))
 
-@auth.route('/signup', methods=["GET", "POST"])
-def signMeUp():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = UserCreationForm()
-    if request.method == "POST":
-        print('POST request made')
-        if form.validate():
-            username = form.username.data
-            email = form.email.data
-            password = form.password.data
+# @auth.route('/signup', methods=["GET", "POST"])
+# def signMeUp():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('index'))
+#     form = UserCreationForm()
+#     if request.method == "POST":
+#         print('POST request made')
+#         if form.validate():
+#             username = form.username.data
+#             email = form.email.data
+#             password = form.password.data
 
-            # add user to database
-            user = User(username, email, password)
+#             # add user to database
+#             user = User(username, email, password)
 
-            # add instance to our db
-            db.session.add(user)
-            db.session.commit()
-            flash("Successfully registered a new user", 'success')
-            return redirect(url_for('auth.logMeIn'))
-        else:
-            flash('Invalid form. Please fill it out correctly.', 'danger')
-    return render_template('signup.html', form = form)
+#             # add instance to our db
+#             db.session.add(user)
+#             db.session.commit()
+#             flash("Successfully registered a new user", 'success')
+#             return redirect(url_for('auth.logMeIn'))
+#         else:
+#             flash('Invalid form. Please fill it out correctly.', 'danger')
+#     return render_template('signup.html', form = form)
 
 
 ##### API ROUTES #########
@@ -159,6 +159,8 @@ def SavedCategoriesAPI(user_id):
         for each in my_cats:
             search_string+=f'{each}+AND+'
         search_string=search_string[:-5]
+    else:
+        search_string=my_cats[0]
     print(search_string)
     print(my_cats)
     return {'status': 'ok', 'total_results': len(categories), "categories": my_cats, 'search':search_string}
@@ -186,3 +188,53 @@ def delCategoryAPI(user):
         'message': f"{category} succesfully deleted"
     }
 
+
+@auth.route('/api/savedarticles', methods=['POST'])
+@token_required
+def SaveArticlesAPI(user):
+    data = request.json # this is coming from POST request Body
+    title=data['title']
+    author=data['author']
+    source_name=data['source_name']
+    description=data['description']
+    url=data['url']
+    url_image=data['url_image']
+    published_at=data['published_at']
+    
+    print(title)
+    new_article = SavedArticles(title,author,source_name,description, url, url_image, published_at,user.id)
+    
+    new_article.save()
+
+    return {
+        'status': 'ok',
+        'message': f"Article {title} succesfully saved"
+    }
+@auth.route('/api/savedarticles/<int:user_id>')
+def GetSavedArticlesAPI(user_id):
+    articles = SavedArticles.query.filter_by(user_id=user_id).all()
+    my_arts= [p.to_dict() for p in articles]
+    print(articles)
+   
+    return {'status': 'ok', 'total_results': len(articles), 'articles':my_arts}
+# else:
+#     return {
+#         'status': 'not ok',
+#         'code': 'Invalid Pin',
+#         'message': 'The pin number was incorrect, please try again.'
+#     }
+@auth.route('/api/delarticle', methods=["POST"])
+@token_required
+def delArticleAPI(user):
+    data = request.json # this is coming from POST request Body
+
+    article = data['article']
+    
+
+    del_article = SavedArticles.query.filter_by(title=article,user_id=user.id).first()
+    print(del_article)
+    del_article.delete()
+    return {
+        'status': 'ok',
+        'message': f"{article} succesfully deleted"
+    }

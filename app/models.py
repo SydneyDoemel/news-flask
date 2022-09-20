@@ -64,3 +64,48 @@ class SavedCategories(db.Model):
             'user_id': self.user_id
         }
 
+
+class SavedArticles(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500), nullable=False)
+    author = db.Column(db.String(500), nullable=False)
+    source_name = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.String(750), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    url_image = db.Column(db.String(500))
+    published_at = db.Column(db.String(500), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __init__(self,title,author,source_name, description, url, url_image, published_at,user_id):
+        self.title=title
+        self.author=author
+        self.source_name=source_name
+        self.description=description
+        self.url=url
+        self.url_image=url_image
+        self.published_at=published_at
+        self.user_id = user_id
+
+   
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def saveUpdates(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def to_dict(self):
+        return {
+            'title':self.title,
+            'author':self.author,
+            'source_name': self.source_name, 
+            'description': self.description,
+            'url': self.url,
+            'url_image':self.url_image,
+            'published_at':self.published_at,
+            'user_id': self.user_id
+        }
