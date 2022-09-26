@@ -5,5 +5,10 @@ from app.models import User, db
 def make_shell_context():
     return {'db': db, 'User': User}
 
+
+def index():
+    return{
+        "News":'Flask React Heroku'
+    }
 if __name__ == '__main__':
     app.run()

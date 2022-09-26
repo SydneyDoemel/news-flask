@@ -140,14 +140,23 @@ def addCategoryAPI(user):
 
     category = data['category']
     
+    all_cats = SavedCategories.query.filter_by(user_id=user.id).all()
+    all_cats=[p.category for p in all_cats]
+    print(all_cats,"hi")
+    if category not in all_cats:
+        new_category = SavedCategories(category, user.id)
+        new_category.save()
 
-    new_category = SavedCategories(category, user.id)
-    new_category.save()
+        return {
+            'status': 'ok',
+            'message': f"{category} succesfully saved"
+        }
+    else:
+        return {
+            'status': 'ok',
+            'message': f"{category} already saved"
+        }
 
-    return {
-        'status': 'ok',
-        'message': f"{category} succesfully saved"
-    }
 
 
 @auth.route('/api/savedcategories/<int:user_id>')
