@@ -1,8 +1,6 @@
 from functools import wraps
 from flask import request
-
 from app.models import User
-
 from werkzeug.security import check_password_hash
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 

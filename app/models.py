@@ -13,15 +13,12 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(250), nullable=False)
     apitoken = db.Column(db.String, default=None, nullable=True)
 
-    
-
     def __init__(self, username, email, password):
         self.username = username
         self.email = email
         self.password = generate_password_hash(password)
         self.apitoken = token_hex(16)
 
-   
     def to_dict(self):
         return {
             'id': self.id,
@@ -30,7 +27,6 @@ class User(db.Model, UserMixin):
             'token': self.apitoken
         }
 
- 
     def saveToDB(self):
         db.session.commit()
 
@@ -45,7 +41,6 @@ class SavedCategories(db.Model):
         self.category=category
         self.user_id = user_id
 
-   
     def save(self):
         db.session.add(self)
         db.session.commit()

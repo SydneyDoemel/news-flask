@@ -8,7 +8,7 @@ def make_shell_context():
 
 def index():
     return{
-        "News":'Flask React Heroku'
+        "News":'Flask React'
     }
 if __name__ == '__main__':
     app.run()
